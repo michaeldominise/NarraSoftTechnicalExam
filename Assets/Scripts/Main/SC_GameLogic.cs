@@ -121,11 +121,10 @@ public class SC_GameLogic : MonoBehaviour
         DestroyMatches(false, triggeredGem, otherGem);
         
         // Check for bombs and destroy them
-        while (gameBoard.CheckForBombs())
+        if (gameBoard.CheckForBombs())
         {
             yield return new WaitForSeconds(0.5f);
             DestroyMatches(true, null, null);
-            gameBoard.NewlyCreatedBombs.Clear();
         }
 
         // Safely clears the newly created bombs cache

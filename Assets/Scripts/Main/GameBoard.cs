@@ -186,14 +186,14 @@ public class GameBoard
         {
             for (int y = bombPos.y - _BlastSize; y <= bombPos.y + _BlastSize; y++)
             {
-                if (x >= 0 && x < width && y >= 0 && y < height)
+                if (x >= 0 && x < width && y >= 0 && y < height && allGems[x, y] != null)
                 {
-                    if (allGems[x, y] != null)
-                    {
-                        _print += "(" + x + "," + y + ")" + System.Environment.NewLine;
-                        allGems[x, y].isMatch = true;
-                        currentMatches.Add(allGems[x, y]);
-                    }
+                    var gem = allGems[x, y];
+                    var canExplode = gem.isBomb && !gem.isMatch;
+                    gem.isMatch = true;
+                    currentMatches.Add(gem);
+                    if (canExplode)
+                        MarkBombArea(new Vector2Int(x, y), gem.blastSize);
                 }
             }
         }
