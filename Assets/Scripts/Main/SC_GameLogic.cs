@@ -73,7 +73,7 @@ public class SC_GameLogic : MonoBehaviour
                         _gemToUse = Random.Range(0, SC_GameVariables.Instance.gems.Length);
                         iterations++;
                     }
-                    SpawnGem(new Vector2Int(x, y), SC_GameVariables.Instance.gems[_gemToUse]);
+                    SpawnGem(new Vector2Int(x, y), y + SC_GameVariables.Instance.dropHeight, SC_GameVariables.Instance.gems[_gemToUse]);
                 });
                 yield return new WaitForSeconds(.01f);
             }
@@ -84,7 +84,7 @@ public class SC_GameLogic : MonoBehaviour
         unityObjects["Txt_Score"].GetComponent<TextMeshProUGUI>().text = score.ToString("0");
     }
     
-    private void SpawnGem(Vector2Int _Position, SC_Gem _GemToSpawn)
+    private void SpawnGem(Vector2Int _Position, float spawnYPos, SC_Gem _GemToSpawn)
     {
         if (Random.Range(0, 100f) < SC_GameVariables.Instance.bombChance)
             _GemToSpawn = SC_GameVariables.Instance.GetBomb(GlobalEnums.GemType.normalBomb);
@@ -92,7 +92,7 @@ public class SC_GameLogic : MonoBehaviour
         gemSpawner.Spawn(_GemToSpawn, onInitialize: _gem =>
         {
             _gem.transform.SetParent(unityObjects["GemsHolder"].transform);
-            _gem.transform.position = new Vector3(_Position.x, _Position.y + SC_GameVariables.Instance.dropHeight, 0f);
+            _gem.transform.position = new Vector3(_Position.x, spawnYPos, 0f);
             _gem.transform.localRotation = Quaternion.identity;
             _gem.name = "Gem - " + _Position.x + ", " + _Position.y;
             gameBoard.SetGem(_Position.x,_Position.y, _gem);
@@ -124,7 +124,7 @@ public class SC_GameLogic : MonoBehaviour
         while (gameBoard.CheckForBombs())
         {
             yield return new WaitForSeconds(0.5f);
-            DestroyMatches(true, triggeredGem, otherGem);
+            DestroyMatches(true, null, null);
             gameBoard.NewlyCreatedBombs.Clear();
         }
 
@@ -229,15 +229,9 @@ public class SC_GameLogic : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         gameBoard.FindAllMatches();
         if (gameBoard.CurrentMatches.Count > 0)
-        {
-            yield return new WaitForSeconds(0.5f);
             StartDestroyMatches();
-        }
         else
-        {
-            yield return new WaitForSeconds(0.5f);
             currentState = GlobalEnums.GameState.move;
-        }
     }
     private IEnumerator RefillBoard()
     {
@@ -259,16 +253,24 @@ public class SC_GameLogic : MonoBehaviour
             .ThenBy(p => p.x)    // left to right
             .ToList();
         
-        foreach (Vector2Int pos in requestPositions)
+        var rowGroup = new List<List<Vector2Int>>();
+        for (var col = 0; col < SC_GameVariables.Instance.colsSize; col++)
+            rowGroup.Add(requestPositions.Where(x => x.x == col).ToList());
+        
+        foreach (var row in rowGroup)
         {
-            var bottomAndSideGems = GetGemsBottomAndSide(pos);
-            var gemsToSpawn = SC_GameVariables.Instance.gems
-                .Where(x => !bottomAndSideGems.Contains(x.type))
-                .ToList();
-            
-            int gemToUse = Random.Range(0, gemsToSpawn.Count);
-            SpawnGem(pos, gemsToSpawn[gemToUse]);
-            yield return new WaitForSeconds(.05f);
+            for (var index = 0; index < row.Count; index++)
+            {
+                var cell = row[index];
+                var bottomAndSideGems = GetGemsBottomAndSide(cell);
+                var gemsToSpawn = SC_GameVariables.Instance.gems
+                    .Where(x => !bottomAndSideGems.Contains(x.type))
+                    .ToList();
+
+                int gemToUse = Random.Range(0, gemsToSpawn.Count);
+                SpawnGem(cell, index + SC_GameVariables.Instance.dropHeight,  gemsToSpawn[gemToUse]);
+                yield return new WaitForSeconds(.05f);
+            }
         }
 
         CheckMisplacedGems();

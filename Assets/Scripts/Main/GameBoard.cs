@@ -72,8 +72,7 @@ public class GameBoard
 
     public void FindAllMatches()
     {
-        currentGroupMatches.Clear();
-        currentMatches.Clear();
+        ClearMatches();
 
         for (int x = 0; x < width; x++)
             for (int y = 0; y < height; y++)
@@ -199,6 +198,13 @@ public class GameBoard
             }
         }
         currentMatches = currentMatches.Distinct().ToList();
+    }
+    
+    public void ClearMatches()
+    {
+        currentGroupMatches.Clear();
+        newlyCreatedBombs.Clear();
+        currentMatches.Clear();
     }
 }
 

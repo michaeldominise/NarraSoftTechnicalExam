@@ -973,7 +973,7 @@ MonoBehaviour:
   - {fileID: 4372168081761593873, guid: 91ba2370328500d4db689dad894b1602, type: 3}
   bonusAmount: 0.5
   bombChance: 3
-  dropHeight: 1
+  dropHeight: 7
   gemSpeed: 7
   scoreSpeed: 5
   rowsSize: 7
