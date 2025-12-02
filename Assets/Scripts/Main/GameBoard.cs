@@ -155,7 +155,7 @@ public class GameBoard
                 int x = gem.posIndex.x;
                 int y = gem.posIndex.y;
 
-                hasBomb |= CheckBombArea(x, y);
+                hasBomb |= CheckBombArea(x, y, true);
                 hasBomb |= CheckBombArea(x - 1, y);
                 hasBomb |= CheckBombArea(x + 1, y);
                 hasBomb |= CheckBombArea(x, y - 1);
@@ -165,7 +165,7 @@ public class GameBoard
 
         return hasBomb;
 
-        bool CheckBombArea(int x, int y)
+        bool CheckBombArea(int x, int y, bool destroySpecialBomb = false)
         {
             if (x < 0 || x >= width || y < 0 || y >= height)
                 return false;
@@ -173,7 +173,9 @@ public class GameBoard
             var potentialBomb = allGems[x, y];
             if (potentialBomb == null || !potentialBomb.isBomb || (newlyCreatedBombs?.Contains(potentialBomb) ?? false))
                 return false;
-
+            if(!destroySpecialBomb && potentialBomb.type != GlobalEnums.GemType.normalBomb)
+                return false;
+            
             MarkBombArea(new Vector2Int(x, y), potentialBomb.blastSize);
             return true;
         }
