@@ -21,7 +21,8 @@ public class SC_Gem : MonoBehaviour
     public int scoreValue = 10;
 
     public int blastSize = 1;
-    private SC_GameLogic scGameLogic;
+    
+    private SC_GameLogic ScGameLogic => SC_GameLogic.Instance;
 
     void Update()
     {
@@ -30,12 +31,12 @@ public class SC_Gem : MonoBehaviour
         else
         {
             transform.position = new Vector3(posIndex.x, posIndex.y, posIndex.y * 0.01f);
-            scGameLogic.SetGem(posIndex.x, posIndex.y, this);
+            ScGameLogic.SetGem(posIndex.x, posIndex.y, this);
         }
         if (mousePressed && Input.GetMouseButtonUp(0))
         {
             mousePressed = false;
-            if (scGameLogic.CurrentState == GlobalEnums.GameState.move)
+            if (ScGameLogic.CurrentState == GlobalEnums.GameState.move)
             {
                 finalTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 CalculateAngle();
@@ -43,16 +44,15 @@ public class SC_Gem : MonoBehaviour
         }
     }
 
-    public void SetupGem(SC_GameLogic _ScGameLogic,Vector2Int _Position)
+    public void SetupGem(Vector2Int _Position)
     {
         posIndex = _Position;
-        scGameLogic = _ScGameLogic;
         isMatch = false;
     }
 
     private void OnMouseDown()
     {
-        if (scGameLogic.CurrentState == GlobalEnums.GameState.move)
+        if (ScGameLogic.CurrentState == GlobalEnums.GameState.move)
         {
             firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             mousePressed = true;
@@ -74,42 +74,42 @@ public class SC_Gem : MonoBehaviour
 
         if (swipeAngle < 45 && swipeAngle > -45 && posIndex.x < SC_GameVariables.Instance.rowsSize - 1)
         {
-            otherGem = scGameLogic.GetGem(posIndex.x + 1, posIndex.y);
+            otherGem = ScGameLogic.GetGem(posIndex.x + 1, posIndex.y);
             otherGem.posIndex.x--;
             posIndex.x++;
 
         }
         else if (swipeAngle > 45 && swipeAngle <= 135 && posIndex.y < SC_GameVariables.Instance.colsSize - 1)
         {
-            otherGem = scGameLogic.GetGem(posIndex.x, posIndex.y + 1);
+            otherGem = ScGameLogic.GetGem(posIndex.x, posIndex.y + 1);
             otherGem.posIndex.y--;
             posIndex.y++;
         }
         else if (swipeAngle < -45 && swipeAngle >= -135 && posIndex.y > 0)
         {
-            otherGem = scGameLogic.GetGem(posIndex.x, posIndex.y - 1);
+            otherGem = ScGameLogic.GetGem(posIndex.x, posIndex.y - 1);
             otherGem.posIndex.y++;
             posIndex.y--;
         }
         else if (swipeAngle > 135 || swipeAngle < -135 && posIndex.x > 0)
         {
-            otherGem = scGameLogic.GetGem(posIndex.x - 1, posIndex.y);
+            otherGem = ScGameLogic.GetGem(posIndex.x - 1, posIndex.y);
             otherGem.posIndex.x++;
             posIndex.x--;
         }
 
-        scGameLogic.SetGem(posIndex.x, posIndex.y, this);
-        scGameLogic.SetGem(otherGem.posIndex.x, otherGem.posIndex.y, otherGem);
+        ScGameLogic.SetGem(posIndex.x, posIndex.y, this);
+        ScGameLogic.SetGem(otherGem.posIndex.x, otherGem.posIndex.y, otherGem);
 
         StartCoroutine(CheckMoveCo());
     }
 
     public IEnumerator CheckMoveCo()
     {
-        scGameLogic.SetState(GlobalEnums.GameState.wait);
+        ScGameLogic.SetState(GlobalEnums.GameState.wait);
 
         yield return new WaitForSeconds(.5f);
-        scGameLogic.FindAllMatches();
+        ScGameLogic.FindAllMatches();
 
         if (otherGem != null)
         {
@@ -118,15 +118,15 @@ public class SC_Gem : MonoBehaviour
                 otherGem.posIndex = posIndex;
                 posIndex = previousPos;
 
-                scGameLogic.SetGem(posIndex.x, posIndex.y, this);
-                scGameLogic.SetGem(otherGem.posIndex.x, otherGem.posIndex.y, otherGem);
+                ScGameLogic.SetGem(posIndex.x, posIndex.y, this);
+                ScGameLogic.SetGem(otherGem.posIndex.x, otherGem.posIndex.y, otherGem);
 
                 yield return new WaitForSeconds(.5f);
-                scGameLogic.SetState(GlobalEnums.GameState.move);
+                ScGameLogic.SetState(GlobalEnums.GameState.move);
             }
             else
             {
-                scGameLogic.StartDestroyMatches(this, otherGem);
+                ScGameLogic.StartDestroyMatches(this, otherGem);
             }
         }
     }

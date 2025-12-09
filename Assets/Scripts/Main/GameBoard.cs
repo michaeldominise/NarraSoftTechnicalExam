@@ -14,14 +14,6 @@ public class GameBoard
     public int Width { get { return width; } }
   
     private SC_Gem[,] allGems;
-  //  public Gem[,] AllGems { get { return allGems; } }
-
-    private int score = 0;
-    public int Score 
-    {
-        get { return score; }
-        set { score = value; }
-    }
 
     private List<List<SC_Gem>> currentGroupMatches = new();
     public List<List<SC_Gem>> CurrentGroupMatches => currentGroupMatches;
@@ -40,6 +32,7 @@ public class GameBoard
         width = _Width;
         allGems = new SC_Gem[width, height];
     }
+    
     public bool MatchesAt(Vector2Int _PositionToCheck, SC_Gem _GemToCheck)
     {
         if (_PositionToCheck.x > 1)
