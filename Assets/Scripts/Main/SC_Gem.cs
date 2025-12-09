@@ -109,8 +109,8 @@ public class SC_Gem : MonoBehaviour
         ScGameLogic.SetState(GlobalEnums.GameState.wait);
 
         yield return new WaitForSeconds(.5f);
-        ScGameLogic.FindAllMatches();
-
+        ScGameLogic.FindAllMatches(this, otherGem);
+        
         if (otherGem != null)
         {
             if (isMatch == false && otherGem.isMatch == false)

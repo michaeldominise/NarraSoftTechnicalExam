@@ -99,11 +99,12 @@ public class SC_GameLogic : MonoBehaviour
         // Safely clears the newly created bombs cache
         gameBoard.NewlyCreatedBombs.Clear();
         
-        yield return new WaitForSeconds(SC_GameVariables.Instance.decreaseRowCoDelay);
+        yield return new WaitForSeconds(SC_GameVariables.Instance.gemDropInterval);
         
         // Decrease row positions and fill empty spaces
-        yield return DecreaseRowCo();
-        yield return FilledBoardCo();
+        StartCoroutine(DecreaseRowCo());
+        StartCoroutine(FilledBoardCo());
+        
     }
     
     private void DestroyMatches(bool destroyBombs, SC_Gem triggeredGem, SC_Gem otherGem)
@@ -153,10 +154,28 @@ public class SC_GameLogic : MonoBehaviour
                     _curGem.posIndex.y -= nullCounter;
                     SetGem(x, y - nullCounter, _curGem);
                     SetGem(x, y, null);
-                    yield return new WaitForSeconds(SC_GameVariables.Instance.decreaseRowCoDelay);
+                    yield return new WaitForSeconds(SC_GameVariables.Instance.gemDropInterval);
                 }
             }
             nullCounter = 0;
+        
+            var refillCounter = 0;
+            for (int y = 0; y < gameBoard.Height; y++)
+            {
+                SC_Gem _curGem = gameBoard.GetGem(x, y);
+                if (_curGem != null)
+                    continue;
+                var position = new Vector2Int(x, y);
+                var bottomAndSideGems = GetGemsBottomAndSide(position);
+                var gemsToSpawn = SC_GameVariables.Instance.gems
+                    .Where(x => !bottomAndSideGems.Contains(x.type))
+                    .ToList();
+
+                int gemToUse = Random.Range(0, gemsToSpawn.Count);
+                SpawnGem(position, refillCounter + SC_GameVariables.Instance.dropHeight,  gemsToSpawn[gemToUse]);
+                yield return new WaitForSeconds(SC_GameVariables.Instance.gemDropInterval);
+                refillCounter++;
+            }
         }
     }
     
@@ -173,54 +192,12 @@ public class SC_GameLogic : MonoBehaviour
 
     private IEnumerator FilledBoardCo()
     {
-        yield return new WaitForSeconds(SC_GameVariables.Instance.refillBoardDelay);
-        yield return RefillBoard();
         yield return new WaitForSeconds(SC_GameVariables.Instance.findAllMatchesDelay);
         gameBoard.FindAllMatches();
         if (gameBoard.CurrentMatches.Count > 0)
             StartDestroyMatches();
         else
             currentState = GlobalEnums.GameState.move;
-    }
-    private IEnumerator RefillBoard()
-    {
-        List<Vector2Int> requestPositions = new List<Vector2Int>();
-        for (int x = 0; x < gameBoard.Width; x++)
-        {
-            for (int y = 0; y < gameBoard.Height; y++)
-            {
-                SC_Gem _curGem = gameBoard.GetGem(x,y);
-                if (_curGem == null)
-                    requestPositions.Add(new Vector2Int(x,y));
-            }
-        }
-        
-        requestPositions = requestPositions
-            .OrderBy(p => p.y)   // bottom to top
-            .ThenBy(p => p.x)    // left to right
-            .ToList();
-        
-        var rowGroup = new List<List<Vector2Int>>();
-        for (var col = 0; col < SC_GameVariables.Instance.colsSize; col++)
-            rowGroup.Add(requestPositions.Where(x => x.x == col).ToList());
-        
-        foreach (var row in rowGroup)
-        {
-            for (var index = 0; index < row.Count; index++)
-            {
-                var cell = row[index];
-                var bottomAndSideGems = GetGemsBottomAndSide(cell);
-                var gemsToSpawn = SC_GameVariables.Instance.gems
-                    .Where(x => !bottomAndSideGems.Contains(x.type))
-                    .ToList();
-
-                int gemToUse = Random.Range(0, gemsToSpawn.Count);
-                SpawnGem(cell, index + SC_GameVariables.Instance.dropHeight,  gemsToSpawn[gemToUse]);
-                yield return new WaitForSeconds(SC_GameVariables.Instance.gemDropInterval);
-            }
-        }
-
-        CheckMisplacedGems();
     }
 
     // returns a list of gems that are on the bottom and side of the given position
@@ -256,10 +233,7 @@ public class SC_GameLogic : MonoBehaviour
         foreach (SC_Gem g in foundGems)
             SC_Spawner.Instance.DespawnGem(g);
     }
-    public void FindAllMatches()
-    {
-        gameBoard.FindAllMatches();
-    }
+    public void FindAllMatches(SC_Gem gem1, SC_Gem gem2) => gameBoard.FindAllMatches(gem1, gem2);
 
     #endregion
 }
