@@ -1020,10 +1020,8 @@ MonoBehaviour:
   rowsSize: 7
   colsSize: 7
   setupDropInterval: 0.01
-  bombCheckInterval: 0.5
-  decreaseRowCoDelay: 0.02
+  bombCheckInterval: 0
   gemDropInterval: 0.02
-  refillBoardDelay: 0.05
   findAllMatchesDelay: 0.5
 --- !u!1 &1450061018
 GameObject:

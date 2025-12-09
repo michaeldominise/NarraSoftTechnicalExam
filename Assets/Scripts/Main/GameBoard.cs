@@ -63,81 +63,81 @@ public class GameBoard
         return allGems[_X, _Y];
     }
 
-    public void FindAllMatches()
+    public void FindAllMatches(SC_Gem gem1 = null, SC_Gem gem2 = null)
     {
         ClearMatches();
+        CheckBombMatch(gem1, gem2);
 
         for (int x = 0; x < width; x++)
-            for (int y = 0; y < height; y++)
-            {
-                SC_Gem currentGem = allGems[x, y];
-                if (currentGem != null)
-                {
-                    if (x > 0 && x < width - 1)
-                    {
-                        SC_Gem leftGem = allGems[x - 1, y];
-                        SC_Gem rightGem = allGems[x + 1, y];
-                        //checking no empty spots
-                        if (leftGem != null && rightGem != null)
-                        {
-                            //Match
-                            if (leftGem.type == currentGem.type && rightGem.type == currentGem.type)
-                            {
-                                currentGem.isMatch = true;
-                                leftGem.isMatch = true;
-                                rightGem.isMatch = true;
-                                AddMatchesToList(currentGem, leftGem, rightGem);
-                            }
-                        }
-                    }
-
-                    if (y > 0 && y < height - 1)
-                    {
-                        SC_Gem aboveGem = allGems[x, y - 1];
-                        SC_Gem bellowGem = allGems[x, y + 1];
-                        //checking no empty spots
-                        if (aboveGem != null && bellowGem != null)
-                        {
-                            //Match
-                            if (aboveGem.type == currentGem.type && bellowGem.type == currentGem.type)
-                            {
-                                currentGem.isMatch = true;
-                                aboveGem.isMatch = true;
-                                bellowGem.isMatch = true;
-                                AddMatchesToList(currentGem, aboveGem, bellowGem);
-                            }
-                        }
-                    }
-                }
-            }
-
-        for (var index = 0; index < currentGroupMatches.Count; index++)
+        for (int y = 0; y < height; y++)
         {
-            var groupMatch = currentGroupMatches[index];
-            var scGems = groupMatch.Distinct().ToList();
-            currentGroupMatches[index] = scGems;
+            SC_Gem currentGem = allGems[x, y];
+            if (currentGem == null) continue;
+
+            CheckLineMatch(currentGem, x, y, 1, 0);   // Horizontal
+            CheckLineMatch(currentGem, x, y, 0, 1);   // Vertical
         }
 
-        foreach (var groupMatch in currentGroupMatches)
-            foreach (var gem in groupMatch)
-                currentMatches.Add(gem);
+        // Remove duplicates in each group
+        for (int i = 0; i < currentGroupMatches.Count; i++)
+            currentGroupMatches[i] = currentGroupMatches[i].Distinct().ToList();
+
+        // Add all to final match list
+        foreach (var group in currentGroupMatches)
+        foreach (var gem in group)
+            currentMatches.Add(gem);
     }
+    
+    private void CheckBombMatch(SC_Gem centerGem, SC_Gem other)
+    {
+        if (centerGem == null || !centerGem.isBomb || other == null || !other.isBomb) 
+            return;
+        
+        AddMatchesToList(centerGem);
+        AddMatchesToList(other);
+    }
+
+    private void CheckLineMatch(SC_Gem centerGem, int x, int y, int dx, int dy)
+    {
+        int leftX = x - dx;
+        int leftY = y - dy;
+        int rightX = x + dx;
+        int rightY = y + dy;
+
+        if (!IsInside(leftX, leftY) || !IsInside(rightX, rightY))
+            return;
+
+        SC_Gem gemA = allGems[leftX, leftY];
+        SC_Gem gemB = allGems[rightX, rightY];
+
+        // Normal 3-match
+        if (CheckMatchesOfType(centerGem.type, gemA, gemB))
+            AddMatchesToList(centerGem, gemA, gemB);
+    }
+    
+    private bool IsInside(int x, int y)
+        => x >= 0 && x < width && y >= 0 && y < height;
+    
+    private bool CheckMatchesOfType(GlobalEnums.GemType type, params SC_Gem[] gems)
+        => gems.All(g => g != null && g.type == type);
 
     private void AddMatchesToList(params SC_Gem[] matches)
     {
-        foreach (var groupMatch in currentGroupMatches)
+        foreach (var g in matches)
+            g.isMatch = true;
+
+        foreach (var group in currentGroupMatches)
         {
-            foreach (var match in matches)
-                if (groupMatch.Contains(match))
-                {
-                    groupMatch.AddRange(matches);
-                    return;
-                }
+            if (matches.Any(m => group.Contains(m)))
+            {
+                group.AddRange(matches);
+                return;
+            }
         }
-        
+
         currentGroupMatches.Add(matches.ToList());
     }
-
+    
     public bool CheckForBombs()
     {
         var hasBomb = false;

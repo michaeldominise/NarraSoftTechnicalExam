@@ -22,9 +22,7 @@ public class SC_GameVariables : MonoBehaviour
     [Header("Gameplay Delay Intervals")] 
     public float setupDropInterval = 0.01f;
     public float bombCheckInterval = 0.5f;
-    public float decreaseRowCoDelay = 0.2f;
     public float gemDropInterval = 0.05f;
-    public float refillBoardDelay = 0.05f;
     public float findAllMatchesDelay = 0.5f;
 
     #region Singleton
